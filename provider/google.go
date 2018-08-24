@@ -174,7 +174,7 @@ func (p *GoogleProvider) Zones() (map[string]*dns.ManagedZone, error) {
 
 	log.Debugf("Matching zones against domain filters: %v", p.domainFilter.filters)
 	if err := p.managedZonesClient.List(p.project).Pages(context.TODO(), f); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("managedZones/list for %s failed: %v", p.project, err)
 	}
 
 	if len(zones) == 0 {
@@ -222,7 +222,7 @@ func (p *GoogleProvider) Records() (endpoints []*endpoint.Endpoint, _ error) {
 
 	for _, z := range zones {
 		if err := p.resourceRecordSetsClient.List(p.project, z.Name).Pages(context.TODO(), f); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("resourceRecordSets/list for %s, %s failed: %v", p.project, z.Name, err)
 		}
 	}
 
@@ -315,7 +315,7 @@ func (p *GoogleProvider) submitChange(change *dns.Change) error {
 
 	for z, c := range changes {
 		if _, err := p.changesClient.Create(p.project, z, c).Do(); err != nil {
-			return err
+			return fmt.Errorf("changes/create for %s, %s, %v failed: %v", p.project, z, c, err)
 		}
 	}
 
